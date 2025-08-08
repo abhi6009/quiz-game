@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>General Knowledge Quiz</title>
+    <style>
+        :root {
+            --primary-color: #3498db;
+            --secondary-color: #2c3e50;
+            --light-color: #ecf0f1;
+            --white-color: #ffffff;
+            --correct-color: #2ecc71;
+            --incorrect-color: #e74c3c;
+            --hint-color: #f39c12;
+            --disabled-color: #bdc3c7;
+            --shadow-color: rgba(0, 0, 0, 0.1);
+            --border-color: #ffe58f;
+            --hint-text-color: #8a6d3b;
+            --hint-bg-color: #fffbe6;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: var(--light-color);
+            color: var(--secondary-color);
+            padding: 1rem;
+            box-sizing: border-box;
+        }
+
+        .container {
+            background-color: var(--white-color);
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 4px 15px var(--shadow-color);
+            width: 100%;
+            max-width: 800px;
+            text-align: center;
+            box-sizing: border-box;
+        }
+
+        #difficulty-selection, #quiz-container, #results-container {
+            display: none;
+        }
+
+        #difficulty-selection.active, #quiz-container.active, #results-container.active {
+            display: block;
+        }
+
+        h1, h2 {
+            margin-top: 0;
+            margin-bottom: 1.5rem;
+        }
+
+        .btn {
+            display: inline-block;
+            background-color: var(--primary-color);
+            color: var(--white-color);
+            padding: 1rem 2rem;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 0.5rem;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            text-decoration: none;
+            user-select: none;
+        }
+
+        .btn:hover:not(:disabled) {
+            background-color: #2980b9;
+            transform: translateY(-2px);
+        }
+
+        .btn:disabled {
+            background-color: var(--disabled-color);
+            cursor: not-allowed;
+        }
+
+        .difficulty-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 1rem;
+        }
+
+        #quiz-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            font-size: 1.2rem;
+            font-weight: bold;
+        }
+
+        #question-text {
+            font-size: 1.5rem;
+            margin-bottom: 2rem;
+            min-height: 5rem;
+        }
+
+        .options-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .option {
+            background-color: var(--light-color);
+            padding: 1rem;
+            border-radius: 5px;
+            cursor: pointer;
+            transition: background-color 0.3s ease, transform 0.2s ease;
+            border: 2px solid transparent;
+        }
+
+        .option:hover {
+            transform: translateY(-3px);
+            border-color: var(--primary-color);
+        }
+        
+        .option.selected {
+            border-color: var(--secondary-color);
+        }
+
+        .option.correct {
+            background-color: var(--correct-color);
+            color: var(--white-color);
+            border-color: var(--correct-color);
+        }
+
+        .option.incorrect {
+            background-color: var(--incorrect-color);
+            color: var(--white-color);
+            border-color: var(--incorrect-color);
+        }
+
+        #hint-container {
+            margin-bottom: 1.5rem;
+            min-height: 60px;
+        }
+
+        #hint-text {
+            background-color: var(--hint-bg-color);
+            border: 1px solid var(--border-color);
+            padding: 1rem;
+            border-radius: 5px;
+            color: var(--hint-text-color);
+            display: none;
+        }
+
+        #controls {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <!-- Difficulty Selection Screen -->
+        <div id="difficulty-selection" class="active">
+            <h1>General Knowledge Quiz</h1>
+            <h2>Select Difficulty Level</h2>
+            <div class="difficulty-grid">
+                <button class="btn" onclick="startQuiz('Easy')">Easy</button>
+                <button class="btn" onclick="startQuiz('Moderate')">Moderate</button>
+                <button class="btn" onclick="startQuiz('Intermediate')">Intermediate</button>
+                <button class="btn" onclick="startQuiz('Hard')">Hard</button>
+                <button class="btn" onclick="startQuiz('Very Hard')">Very Hard</button>
+            </div>
+        </div>
+
+        <!-- Quiz Container -->
+        <div id="quiz-container">
+            <div id="quiz-header">
+                <span id="score">Score: 0</span>
+                <span id="question-counter"></span>
+                <span id="timer">Time Left: 180</span>
+            </div>
+            <h2 id="question-text">Question goes here...</h2>
+            <div class="options-grid">
+                <div class="option" onclick="selectOption(this)" data-index="0">Option 1</div>
+                <div class="option" onclick="selectOption(this)" data-index="1">Option 2</div>
+                <div class="option" onclick="selectOption(this)" data-index="2">Option 3</div>
+                <div class="option" onclick="selectOption(this)" data-index="3">Option 4</div>
+            </div>
+            <div id="hint-container">
+                <p id="hint-text">Hint will be shown here.</p>
+            </div>
+            <div id="controls">
+                <button id="hint-btn" class="btn" onclick="showHint()">Show Hint</button>
+                <button id="next-btn" class="btn" onclick="nextQuestion()" disabled>Next</button>
+            </div>
+        </div>
+
+        <!-- Results Screen -->
+        <div id="results-container">
+            <h1>Quiz Complete!</h1>
+            <h2 id="final-score">Your final score is: 0</h2>
+            <p id="final-summary"></p>
+            <button class="btn" onclick="restartQuiz()">Play Again</button>
+        </div>
+    </div>
+
+    <script>
+        const quizData = {
+            "Easy": [
+                { question: "What is the capital of France?", options: ["Berlin", "Madrid", "Paris", "Rome"], answer: 2, hint: "It's known as the 'City of Love'." },
+                { question: "Which planet is known as the Red Planet?", options: ["Earth", "Mars", "Jupiter", "Venus"], answer: 1, hint: "It's the fourth planet from the Sun." },
+                { question: "What is the largest mammal in the world?", options: ["Elephant", "Blue Whale", "Giraffe", "Great White Shark"], answer: 1, hint: "It lives in the ocean." },
+                { question: "How many continents are there?", options: ["5", "6", "7", "8"], answer: 2, hint: "One starts with 'A' and another with 'A'." },
+                { question: "What is the primary language spoken in Brazil?", options: ["Spanish", "English", "Portuguese", "French"], answer: 2, hint: "It's the only country in South America with this official language." },
+                { question: "Who wrote 'Romeo and Juliet'?", options: ["Charles Dickens", "William Shakespeare", "Jane Austen", "Mark Twain"], answer: 1, hint: "He was an English playwright, poet, and actor." },
+                { question: "What is the chemical symbol for water?", options: ["O2", "CO2", "H2O", "NaCl"], answer: 2, hint: "It consists of two hydrogen atoms and one oxygen atom." },
+                { question: "Which is the largest ocean on Earth?", options: ["Atlantic", "Indian", "Arctic", "Pacific"], answer: 3, hint: "It covers about one-third of the surface of the Earth." },
+                { question: "What is the tallest mountain in the world?", options: ["K2", "Kangchenjunga", "Mount Everest", "Lhotse"], answer: 2, hint: "It is located in the Himalayas." },
+                { question: "Who painted the Mona Lisa?", options: ["Vincent van Gogh", "Pablo Picasso", "Leonardo da Vinci", "Claude Monet"], answer: 2, hint: "He was an Italian polymath of the High Renaissance." }
+            ],
+            "Moderate": [
+                { question: "What is the currency of Japan?", options: ["Yuan", "Yen", "Won", "Baht"], answer: 1, hint: "It is the third most traded currency in the foreign exchange market." },
+                { question: "Which country is known as the Land of the Rising Sun?", options: ["China", "South Korea", "Japan", "Thailand"], answer: 2, hint: "Its name is often translated this way." },
+                { question: "What is the hardest natural substance on Earth?", options: ["Gold", "Iron", "Diamond", "Quartz"], answer: 2, hint: "It is a form of carbon." },
+                { question: "In which year did the Titanic sink?", options: ["1905", "1912", "1918", "1923"], answer: 1, hint: "It happened in the early 20th century, on its maiden voyage." },
+                { question: "What is the main ingredient in guacamole?", options: ["Tomato", "Avocado", "Onion", "Lime"], answer: 1, hint: "It's a green fruit." },
+                { question: "Who was the first person to walk on the moon?", options: ["Buzz Aldrin", "Yuri Gagarin", "Michael Collins", "Neil Armstrong"], answer: 3, hint: "His famous quote includes 'one giant leap for mankind'." },
+                { question: "Which element has the atomic number 1?", options: ["Helium", "Oxygen", "Hydrogen", "Carbon"], answer: 2, hint: "It is the lightest element." },
+                { question: "What is the capital of Australia?", options: ["Sydney", "Melbourne", "Canberra", "Perth"], answer: 2, hint: "It is not the largest or most famous city." },
+                { question: "Who discovered penicillin?", options: ["Marie Curie", "Alexander Fleming", "Louis Pasteur", "Isaac Newton"], answer: 1, hint: "He was a Scottish physician and microbiologist." },
+                { question: "What is the largest desert in the world?", options: ["Sahara Desert", "Arabian Desert", "Gobi Desert", "Antarctic Polar Desert"], answer: 3, hint: "It's considered a polar desert, which might be surprising." }
+            ],
+            "Intermediate": [
+                { question: "What is the smallest country in the world?", options: ["Monaco", "Nauru", "Vatican City", "San Marino"], answer: 2, hint: "It's an independent city-state enclaved within Rome." },
+                { question: "Who wrote '1984'?", options: ["George Orwell", "Aldous Huxley", "Ray Bradbury", "J.R.R. Tolkien"], answer: 0, hint: "He also wrote 'Animal Farm'." },
+                { question: "The Renaissance was a period of 'rebirth' in which continent?", options: ["Asia", "Europe", "Africa", "North America"], answer: 1, hint: "It started in Italy." },
+                { question: "What is the study of earthquakes called?", options: ["Seismology", "Geology", "Volcanology", "Meteorology"], answer: 0, hint: "It involves seismic waves." },
+                { question: "What is the capital of Canada?", options: ["Toronto", "Vancouver", "Montreal", "Ottawa"], answer: 3, hint: "It's located in the province of Ontario." },
+                { question: "Which artist is famous for the 'Campbell's Soup Cans' series?", options: ["Roy Lichtenstein", "Andy Warhol", "Jean-Michel Basquiat", "Keith Haring"], answer: 1, hint: "He was a leading figure in the pop art movement." },
+                { question: "What is the longest river in the world?", options: ["Amazon River", "Nile River", "Yangtze River", "Mississippi River"], answer: 1, hint: "There is some debate, but this one is traditionally considered the longest." },
+                { question: "Which chess piece can only move diagonally?", options: ["Rook", "Knight", "Bishop", "Pawn"], answer: 2, hint: "There are two of them for each player." },
+                { question: "What is the main component of the sun?", options: ["Oxygen and Carbon", "Nitrogen and Oxygen", "Hydrogen and Helium", "Carbon and Nitrogen"], answer: 2, hint: "These are the two lightest elements." },
+                { question: "In Greek mythology, who is the god of the sea?", options: ["Zeus", "Hades", "Poseidon", "Apollo"], answer: 2, hint: "He is often depicted with a trident." }
+            ],
+            "Hard": [
+                { question: "Which country has the most islands in the world?", options: ["Indonesia", "Finland", "Sweden", "Canada"], answer: 2, hint: "It is a Nordic country." },
+                { question: "What is the name of the world's oldest university?", options: ["University of Bologna", "University of Oxford", "University of Al-Qarawiyyin", "University of Cambridge"], answer: 2, hint: "It is located in Fez, Morocco." },
+                { question: "In what year was the first-ever photograph taken?", options: ["1776", "1826", "1856", "1888"], answer: 1, hint: "It was taken in France by Joseph Nicéphore Niépce." },
+                { question: "What is the most consumed manufactured drink in the world?", options: ["Coffee", "Coca-Cola", "Tea", "Beer"], answer: 2, hint: "After water, it is the most popular." },
+                { question: "Which chemical element has the symbol 'Pb'?", options: ["Potassium", "Phosphorus", "Lead", "Platinum"], answer: 2, hint: "Its name comes from the Latin 'plumbum'." },
+                { question: "Who was the first female Prime Minister of the United Kingdom?", options: ["Theresa May", "Margaret Thatcher", "Angela Merkel", "Indira Gandhi"], answer: 1, hint: "She was known as the 'Iron Lady'." },
+                { question: "The Strait of Gibraltar separates which two continents?", options: ["Asia and Africa", "Europe and Africa", "North and South America", "Europe and Asia"], answer: 1, hint: "It connects the Atlantic Ocean to the Mediterranean Sea." },
+                { question: "What is the 'Dunning-Kruger effect'?", options: ["A physical phenomenon", "A cognitive bias", "A chemical reaction", "A historical event"], answer: 1, hint: "It relates to people's perception of their own ability." },
+                { question: "Which country is the largest by area?", options: ["China", "USA", "Canada", "Russia"], answer: 3, hint: "It spans 11 time zones." },
+                { question: "What is the term for a word that is spelled the same forwards and backwards?", options: ["Palindrome", "Anagram", "Onomatopoeia", "Antonym"], answer: 0, hint: "Examples include 'level' and 'radar'." }
+            ],
+            "Very Hard": [
+                { question: "What is the apoapsis of a satellite's orbit?", options: ["The closest point", "The farthest point", "The orbital speed", "The orbital period"], answer: 1, hint: "It is the opposite of periapsis." },
+                { question: "Who composed the opera 'The Magic Flute'?", options: ["Beethoven", "Bach", "Mozart", "Wagner"], answer: 2, hint: "He was a prolific composer of the Classical period from Salzburg." },
+                { question: "In computing, what does 'FSF' stand for?", options: ["Free Software Foundation", "File System Format", "First System Failure", "Fast Software Framework"], answer: 0, hint: "It was founded by Richard Stallman in 1985." },
+                { question: "What is the study of flags called?", options: ["Heraldry", "Cartography", "Vexillology", "Philately"], answer: 2, hint: "It comes from the Latin word 'vexillum'." },
+                { question: "Which battle is considered the turning point of the Pacific War in WWII?", options: ["Battle of Stalingrad", "Battle of Midway", "Battle of Pearl Harbor", "Battle of Britain"], answer: 1, hint: "It occurred six months after the attack on Pearl Harbor." },
+                { question: "What is the boiling point of Tungsten in Celsius?", options: ["3422°C", "4639°C", "5555°C", "6192°C"], answer: 2, hint: "It has the highest boiling point of all known elements." },
+                { question: "The ancient city of 'Ur' was located in which modern-day country?", options: ["Egypt", "Iran", "Syria", "Iraq"], answer: 3, hint: "It was a major Sumerian city-state in ancient Mesopotamia." },
+                { question: "What is the 'Turing test' used to measure?", options: ["A computer's processing speed", "A person's IQ", "A machine's ability to exhibit intelligent behavior", "The strength of a material"], answer: 2, hint: "It was developed by Alan Turing in 1950." },
+                { question: "What is the name of the supercontinent that existed millions of years ago?", options: ["Gondwana", "Laurasia", "Pangaea", "Rodinia"], answer: 2, hint: "It broke apart about 175 million years ago." },
+                { question: "Which philosopher is known for the statement 'I think, therefore I am'?", options: ["Socrates", "Plato", "Aristotle", "René Descartes"], answer: 3, hint: "He was a French philosopher, mathematician, and scientist." }
+            ]
+        };
+
+        let currentDifficulty = '';
+        let currentQuestions = [];
+        let currentQuestionIndex = 0;
+        let score = 0;
+        let timer;
+        let timeLeft = 180;
+        let answeredCorrectly = 0;
+        let answeredIncorrectly = 0;
+
+        const difficultySelectionEl = document.getElementById('difficulty-selection');
+        const quizContainerEl = document.getElementById('quiz-container');
+        const resultsContainerEl = document.getElementById('results-container');
+        const scoreEl = document.getElementById('score');
+        const timerEl = document.getElementById('timer');
+        const questionCounterEl = document.getElementById('question-counter');
+        const questionTextEl = document.getElementById('question-text');
+        const optionsEl = document.querySelectorAll('.option');
+        const hintBtn = document.getElementById('hint-btn');
+        const hintTextEl = document.getElementById('hint-text');
+        const nextBtn = document.getElementById('next-btn');
+        const finalScoreEl = document.getElementById('final-score');
+        const finalSummaryEl = document.getElementById('final-summary');
+
+        function startQuiz(difficulty) {
+            currentDifficulty = difficulty;
+            currentQuestions = shuffleArray([...quizData[difficulty]]);
+            currentQuestionIndex = 0;
+            score = 0;
+            answeredCorrectly = 0;
+            answeredIncorrectly = 0;
+            timeLeft = 180;
+            
+            difficultySelectionEl.classList.remove('active');
+            resultsContainerEl.classList.remove('active');
+            quizContainerEl.classList.add('active');
+            
+            updateScore();
+            loadQuestion();
+            startTimer();
+        }
+
+        function shuffleArray(array) {
+            for (let i = array.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [array[i], array[j]] = [array[j], array[i]];
+            }
+            return array;
+        }
+
+        function loadQuestion() {
+            resetState();
+            if (currentQuestionIndex < currentQuestions.length) {
+                const questionData = currentQuestions[currentQuestionIndex];
+                questionTextEl.textContent = questionData.question;
+                questionCounterEl.textContent = `Question ${currentQuestionIndex + 1}/${currentQuestions.length}`;
+                optionsEl.forEach((option, index) => {
+                    option.textContent = questionData.options[index];
+                });
+                hintTextEl.textContent = questionData.hint;
+            } else {
+                endQuiz();
+            }
+        }
+
+        function resetState() {
+            optionsEl.forEach(option => {
+                option.className = 'option';
+                option.style.pointerEvents = 'auto';
+            });
+            hintTextEl.style.display = 'none';
+            hintBtn.disabled = false;
+            nextBtn.disabled = true;
+            nextBtn.textContent = (currentQuestionIndex === currentQuestions.length - 1) ? 'Finish Quiz' : 'Next';
+        }
+
+        function startTimer() {
+            clearInterval(timer);
+            timerEl.textContent = `Time Left: ${timeLeft}`;
+            timer = setInterval(() => {
+                timeLeft--;
+                timerEl.textContent = `Time Left: ${timeLeft}`;
+                if (timeLeft <= 0) {
+                    endQuiz();
+                }
+            }, 1000);
+        }
+
+        function selectOption(optionElement) {
+            if (!nextBtn.disabled) return; // Prevent changing answer if already answered
+            
+            const selectedAnswer = parseInt(optionElement.dataset.index);
+            const correctAnswer = currentQuestions[currentQuestionIndex].answer;
+
+            if (selectedAnswer === correctAnswer) {
+                score += 10;
+                answeredCorrectly++;
+                optionElement.classList.add('correct');
+            } else {
+                answeredIncorrectly++;
+                optionElement.classList.add('incorrect');
+                optionsEl[correctAnswer].classList.add('correct');
+            }
+            
+            updateScore();
+            optionsEl.forEach(option => {
+                option.style.pointerEvents = 'none';
+            });
+            hintBtn.disabled = true;
+            nextBtn.disabled = false;
+        }
+
+        function updateScore() {
+            scoreEl.textContent = `Score: ${score}`;
+        }
+        
+        function showHint() {
+            hintTextEl.style.display = 'block';
+            hintBtn.disabled = true;
+        }
+
+        function nextQuestion() {
+            currentQuestionIndex++;
+            loadQuestion();
+        }
+
+        function endQuiz() {
+            clearInterval(timer);
+            quizContainerEl.classList.remove('active');
+            resultsContainerEl.classList.add('active');
+            finalScoreEl.textContent = `Your final score is: ${score}`;
+            finalSummaryEl.textContent = `You answered ${answeredCorrectly} questions correctly and ${answeredIncorrectly} incorrectly.`;
+        }
+
+        function restartQuiz() {
+            resultsContainerEl.classList.remove('active');
+            quizContainerEl.classList.remove('active');
+            difficultySelectionEl.classList.add('active');
+        }
+
+    </script>
+</body>
+</html>
